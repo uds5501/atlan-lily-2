@@ -28,8 +28,8 @@ We’ll be diving deep into the Atlan Lily v2.0 architecture. The Primary proble
   - During data refresh, if the same column has been marked “**~PII~**”, we will be over-riding the tags shown to the user as **PII** (however we will store both the tags intelligently in the event we do need to ensure that user set tags are not overridden).
 
 
-# Solution
 
+# Solution
 ## Breakdown of problem statement.
 We can break down the problem statement into the following functional flows - 
 1. **Metadata ingestion and lineage updates** :
@@ -42,6 +42,12 @@ We can break down the problem statement into the following functional flows -
    1. Atlan customers wanting to use the metadata stores and the lineage structures.
 4. **Real time alerting for data quality checks**
    1. **(Inbound, External)** : Alerting customers for potential table data and data reliability issues early on in near real-time latencies.
+
+## First Principles
+1. **Optimize for Cost After Performance**: Ensure the system meets performance requirements first, then optimize for cost efficiency. 
+2. **Prioritize Data Security**: Implement fine-grained access control, encryption, and compliance to protect customer data. 
+3. **Design for Scalability & Resilience**: Architect for growth, ensuring high availability, fault tolerance, and efficient resource utilization.
+
 
 ## Birds Eye View
 To tackle these subproblems, I propose to break down the architecture in the following layers:
@@ -595,7 +601,7 @@ This will be a high read throughput system (**~50k ops/sec**) for such a use cas
 | **scraper_gropu**   | STRING        | Scraper group for the data source   |
 | **allowed_columns** | ARRAY(STRING) | List of columns scraper can access. |
 | **created_at**      | TIMESTAMP     | Timestamp of creation.              |
-I’d love to use a standard **PostgreSQL** database to support these relational tables.
+I’d love to use a standard **PostgreSQL** database to support these relational tables. The policy table should be able to give it standard Asset Level Access Control currently.
 
 ### Data Quality Engine
 The data quality engine will be responsible for early catching any possible fault / anomaly in the data. But first, let’s focus on what it means to have fault / anomalies in data when it’s solely column being used?
@@ -802,6 +808,11 @@ public class QueryAnomalyDetection {
     }
 }
 ```
+
+# Handling multi-tenancy
+- We can deploy using K8s virtual clusters for each tenant, utilizing the common control plane and resources.
+- For AWS isolation, we can configure separate accounts for each tenant.
+- For self hosted stateful components (Arangodb for ex) we can host them separately utilizing the said clusters.
 
 # Flows
 These are the core systems of my solution, if required, I’ll explain certain services within the flows.
